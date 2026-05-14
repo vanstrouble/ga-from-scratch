@@ -1,2 +1,65 @@
-/.DS_Store
-/__pycache__
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+env/
+venv/
+.venv/
+
+# Packaging
+dist/
+build/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Caches
+.mypy_cache/
+
+# Secrets / env
+.env
+
+# IDEs
+.idea/
+.vscode/
+*.code-workspace
+
+# Swap / backup files
+*.swp
+*.swo
+*~
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+.jupyterlab-settings/
+
+# Project artifacts / data
+data/
+models/
+outputs/
+logs/
+.history/
+
+# Large binary data
+*.csv
+*.h5
+*.pkl
+*.joblib
+.weights/
+wandb/
+
+# Misc
+# keep machine learning and build artifacts out of git
