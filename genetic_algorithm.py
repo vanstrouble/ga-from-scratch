@@ -2,76 +2,139 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+def onemax(self, chromosome):
+    """Calculate the fitness of a single chromosome.
+    Args:
+        chromosome: A single binary chromosome.
+    Returns:
+        The number of ones in the chromosome.
+    """
+    return sum(bit for bit in chromosome)
+
+
 class GA():
-    def __init__(self, pop_size, str_size):
-        # initialization
+    def __init__(self, pop_size, str_size, mutation_rate=0.01, crossover_rate=0.7):
+        """Create a new genetic algorithm instance.
+        Args:
+            pop_size: Number of individuals in the population.
+            str_size: Length of each chromosome.
+            mutation_rate: Probability of mutating each gene.
+            crossover_rate: Probability of crossing two parents.
+        Returns:
+            None.
+        """
         self.population = np.random.randint(2, size=(pop_size, str_size), dtype=np.int16)
-        self.best = 0
-        self.idx_best_solution = None
+        self.str_size = str_size
+        self.mutation_rate = mutation_rate
+        self.crossover_rate = crossover_rate
+        self.best_solution = None
+        self.best_fitness = 0
+
+    def _calculate_fitness(self):
+        """Calculate the fitness of each individual.
+        Args:
+            None.
+        Returns:
+            A NumPy array with the fitness value for each chromosome.
+        """
+        return np.sum(self.population, axis=1)
+
+    def _selection(self, fitness):
+        """Select the next generation with roulette wheel selection.
+        Args:
+            fitness: Fitness values for the current population.
+        Returns:
+            A NumPy array with the selected parents.
+        """
+        total_fitness = np.sum(fitness)
+        if total_fitness == 0:
+            probabilities = np.ones(len(self.population)) / len(self.population)
+        else:
+            probabilities = fitness / total_fitness
+
+        selected_indices = np.random.choice(
+            np.arange(len(self.population)),
+            size=len(self.population),
+            p=probabilities
+        )
+        return self.population[selected_indices]
+
+    def _crossover(self, parents):
+        """Apply single-point crossover to the parent population.
+        Args:
+            parents: Selected parents for reproduction.
+        Returns:
+            A NumPy array with the offspring after crossover.
+        """
+        offspring = np.copy(parents)
+        num_parents = len(offspring) if len(offspring) % 2 == 0 else len(offspring) - 1
+
+        for i in range(0, num_parents, 2):
+            if np.random.rand() < self.crossover_rate:
+                crossover_point = np.random.randint(1, self.str_size)
+
+                temp = offspring[i, crossover_point:].copy()
+                offspring[i, crossover_point:] = offspring[i+1, crossover_point:]
+                offspring[i+1, crossover_point:] = temp
+        return offspring
+
+    def _mutation(self, offspring):
+        """Mutate the offspring by flipping random bits.
+        Args:
+            offspring: The chromosomes produced by crossover.
+        Returns:
+            A NumPy array with the mutated offspring.
+        """
+        mutation_mask = np.random.rand(*offspring.shape) < self.mutation_rate
+
+        offspring[mutation_mask] = 1 - offspring[mutation_mask]
+        return offspring
+
+    def _replacement(self, new_population):
+        """Replace the current population with a new one.
+        Args:
+            new_population: The population to store for the next generation.
+        Returns:
+            None.
+        """
+        self.population = new_population
 
     def run(self, iter_num=100):
+        """Run the genetic algorithm for a fixed number of iterations.
+        Args:
+            iter_num: Number of generations to execute.
+        Returns:
+            A tuple with the best fitness history and the best solution found.
+        """
         history = np.empty(shape=iter_num, dtype=np.int16)
         for it in range(iter_num):
-            # Selection
-            total = 0
-            pop_norm = []
-            for chromosome in self.population:
-                val = self.fitness_func(chromosome)
-                total += val
-                pop_norm.append(val)
+            fitness = self._calculate_fitness()
 
-            pop_norm = tuple(val/total for val in pop_norm)
+            current_best_fitness = np.max(fitness)
+            if current_best_fitness > self.best_fitness:
+                self.best_fitness = current_best_fitness
+                self.best_solution = self.population[np.argmax(fitness)].copy()
 
-            selection = []
-            for _ in range(self.population.shape[0]):
-                rand_num = np.random.rand()
-                summation = 0
-                for i, val in enumerate(pop_norm):
-                    if rand_num >= summation and rand_num < summation + val:
-                        selection.append(self.population[i])
-                        break
-                    else:
-                        summation += val
-            selection = np.array(selection, dtype=np.int16)
+            history[it] = self.best_fitness
 
-            # Crossing
-            not_even = 0 if len(self.population) % 2 == 0 else 1
-            for i in range(0, selection.shape[0]-not_even, 2):
-                c_point = np.random.randint(1, selection.shape[1])
-                temp_arr = selection[i][c_point::].copy()
-                selection[i][c_point::] = selection[i+1][c_point::]
-                selection[i+1][c_point::] = temp_arr
+            parents = self._selection(fitness)
+            offspring = self._crossover(parents)
+            mutated_offspring = self._mutation(offspring)
+            self._replacement(mutated_offspring)
 
-            # Mutation
-            for chromosome in selection:
-                idx = np.random.randint(selection.shape[1])
-                chromosome[idx] = 0 if chromosome[idx] == 1 else 1
-
-            # Evolution and replacement
-            for i in range(self.population.shape[0]):
-                if self.fitness_func(selection[i]) > self.fitness_func(self.population[i]):
-                    self.population[i] = selection[i]
-
-            # Save the best in history
-            for i in range(self.population.shape[0]):
-                fit_val = self.fitness_func(self.population[i])
-                if fit_val > self.best:
-                    self.best = fit_val
-                    self.idx_best_solution = i
-            history[it] = self.best
-
-        # Graph history
-        plt.plot(np.arange(1,iter_num+1), history)
-        plt.title('Evolución hasta converger')
-        plt.xlabel('Épocas')
-        plt.ylabel('Aptitud')
+        plt.plot(np.arange(1, iter_num + 1), history)
+        plt.title('Evolución de la Aptitud')
+        plt.xlabel('Generaciones')
+        plt.ylabel('Mejor Aptitud')
+        plt.grid(True)
         plt.show()
 
-        return history, self.population[self.idx_best_solution]
+        print(f"Mejor solución encontrada: {self.best_solution}")
+        print(f"Aptitud de la mejor solución: {self.best_fitness}")
 
-    def fitness_func(self, chromosome):
-        return sum(bit for bit in chromosome)
+        return history, self.best_solution
 
 
 if __name__ == '__main__':
-    GA(91, 20).run()
+    ga = GA(pop_size=200, str_size=50, mutation_rate=0.70)
+    ga.run(iter_num=200)
