@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def onemax(self, chromosome):
+def onemax(chromosome):
     """Calculate the fitness of a single chromosome.
     Args:
         chromosome: A single binary chromosome.
@@ -13,11 +13,12 @@ def onemax(self, chromosome):
 
 
 class GA():
-    def __init__(self, pop_size, str_size, mutation_rate=0.01, crossover_rate=0.7):
+    def __init__(self, pop_size, str_size, fitness_func, mutation_rate=0.01, crossover_rate=0.7):
         """Create a new genetic algorithm instance.
         Args:
             pop_size: Number of individuals in the population.
             str_size: Length of each chromosome.
+            fitness_func: The fitness function to use.
             mutation_rate: Probability of mutating each gene.
             crossover_rate: Probability of crossing two parents.
         Returns:
@@ -27,17 +28,18 @@ class GA():
         self.str_size = str_size
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
+        self.fitness_func = fitness_func
         self.best_solution = None
         self.best_fitness = 0
 
-    def _calculate_fitness(self):
+    def _fitness_function(self):
         """Calculate the fitness of each individual.
         Args:
             None.
         Returns:
             A NumPy array with the fitness value for each chromosome.
         """
-        return np.sum(self.population, axis=1)
+        return np.array([self.fitness_func(chromosome) for chromosome in self.population])
 
     def _selection(self, fitness):
         """Select the next generation with roulette wheel selection.
@@ -108,7 +110,7 @@ class GA():
         """
         history = np.empty(shape=iter_num, dtype=np.int16)
         for it in range(iter_num):
-            fitness = self._calculate_fitness()
+            fitness = self._fitness_function()
 
             current_best_fitness = np.max(fitness)
             if current_best_fitness > self.best_fitness:
@@ -136,5 +138,5 @@ class GA():
 
 
 if __name__ == '__main__':
-    ga = GA(pop_size=200, str_size=50, mutation_rate=0.70)
+    ga = GA(pop_size=200, str_size=50, fitness_func=onemax, mutation_rate=0.70)
     ga.run(iter_num=200)
