@@ -9,7 +9,7 @@ def onemax(chromosome):
     Returns:
         The number of ones in the chromosome.
     """
-    return sum(bit for bit in chromosome)
+    return np.sum(chromosome)
 
 
 class GA():
@@ -130,5 +130,16 @@ class GA():
 
 
 if __name__ == '__main__':
-    ga = GA(pop_size=200, str_size=50, fitness_func=onemax, mutation_rate=0.70)
-    ga.run(iter_num=200)
+    # Parameters for the ONEMAX problem
+    POP_SIZE = 100
+    STR_SIZE = 50
+    MUTATION_RATE = 1 / STR_SIZE  # Heuristic for mutation rate
+    CROSSOVER_RATE = 0.8
+    ITER_NUM = 100
+
+    ga = GA(pop_size=POP_SIZE,
+            str_size=STR_SIZE,
+            fitness_func=onemax,
+            mutation_rate=MUTATION_RATE,
+            crossover_rate=CROSSOVER_RATE)
+    ga.run(iter_num=ITER_NUM)
