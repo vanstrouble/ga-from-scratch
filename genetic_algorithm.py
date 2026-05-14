@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 
 
 def onemax(chromosome):
@@ -94,17 +95,56 @@ class GA:
         """
         self.population = new_population
 
-    def plot_evolution(self, history, iter_num):
+    def plot_evolution(self, history, iter_num, problem_name=None):
         """Plot the fitness evolution over generations.
         Args:
             history: A NumPy array with the best fitness for each generation.
             iter_num: The total number of iterations.
+            problem_name: Optional problem name to include in the title.
         """
-        plt.plot(np.arange(1, iter_num + 1), history)
-        plt.title("Attitud evolution")
-        plt.xlabel("Epoch")
-        plt.ylabel("Best Fitness")
-        plt.grid(True)
+        CORAL = "#DC8665"
+        TEAL = "#138086"
+        PURPLE = "#534666"
+        # ROSE = "#CD7672"
+        AMBER = "#EEB462"
+
+        fig, ax = plt.subplots(figsize=(10, 5))
+        fig.patch.set_facecolor("#1C1C2E")
+        ax.set_facecolor("#1C1C2E")
+
+        generations = np.arange(1, iter_num + 1)
+
+        # Area under the curve
+        ax.fill_between(generations, history, alpha=0.15, color=TEAL)
+        # Main line
+        ax.plot(generations, history, color=TEAL, linewidth=2, zorder=3)
+        # Best fitness marker
+        best_gen = np.argmax(history) + 1
+        ax.scatter(best_gen, self.best_fitness, color=CORAL, s=60, zorder=4)
+        ax.annotate(
+            f"best: {self.best_fitness}",
+            xy=(float(best_gen), float(self.best_fitness)),
+            xytext=(8, -14),
+            textcoords="offset points",
+            color=CORAL,
+            fontsize=9,
+        )
+
+        title = "Genetic Algorithm — Fitness Evolution"
+        if problem_name:
+            title += f"  ·  {problem_name}"
+        ax.set_title(title, color="white", fontsize=13, pad=14)
+        ax.set_xlabel("Generation", color=AMBER, fontsize=10)
+        ax.set_ylabel("Best Fitness", color=AMBER, fontsize=10)
+
+        ax.tick_params(colors="#AAAAAA")
+        for spine in ax.spines.values():
+            spine.set_edgecolor(PURPLE)
+
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.grid(axis="y", color=PURPLE, linestyle="--", linewidth=0.5, alpha=0.5)
+
+        plt.tight_layout()
         plt.show()
 
     def run(self, iter_num=100, elite_size=1, plot_result=False):
@@ -171,4 +211,5 @@ if __name__ == "__main__":
         mutation_rate=MUTATION_RATE,
         crossover_rate=CROSSOVER_RATE,
     )
-    history, best_solution = ga.run(iter_num=ITER_NUM, elite_size=2, plot_result=True)
+    history, best_solution = ga.run(iter_num=ITER_NUM, elite_size=2)
+    ga.plot_evolution(history, ITER_NUM, problem_name="One Max")
