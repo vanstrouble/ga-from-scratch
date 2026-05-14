@@ -32,15 +32,6 @@ class GA():
         self.best_solution = None
         self.best_fitness = 0
 
-    def _fitness_function(self):
-        """Calculate the fitness of each individual.
-        Args:
-            None.
-        Returns:
-            A NumPy array with the fitness value for each chromosome.
-        """
-        return np.array([self.fitness_func(chromosome) for chromosome in self.population])
-
     def _selection(self, fitness):
         """Select the next generation with roulette wheel selection.
         Args:
@@ -110,7 +101,8 @@ class GA():
         """
         history = np.empty(shape=iter_num, dtype=np.int16)
         for it in range(iter_num):
-            fitness = self._fitness_function()
+            # Apply the fitness function to the current population
+            fitness = np.array([self.fitness_func(chromosome) for chromosome in self.population])
 
             current_best_fitness = np.max(fitness)
             if current_best_fitness > self.best_fitness:
