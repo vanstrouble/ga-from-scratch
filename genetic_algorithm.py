@@ -94,11 +94,25 @@ class GA:
         """
         self.population = new_population
 
-    def run(self, iter_num=100, elite_size=1):
+    def plot_evolution(self, history, iter_num):
+        """Plot the fitness evolution over generations.
+        Args:
+            history: A NumPy array with the best fitness for each generation.
+            iter_num: The total number of iterations.
+        """
+        plt.plot(np.arange(1, iter_num + 1), history)
+        plt.title("Attitud evolution")
+        plt.xlabel("Epoch")
+        plt.ylabel("Best Fitness")
+        plt.grid(True)
+        plt.show()
+
+    def run(self, iter_num=100, elite_size=1, plot_result=False):
         """Run the genetic algorithm for a fixed number of iterations.
         Args:
             iter_num: Number of generations to execute.
             elite_size: Number of best individuals to keep for the next generation.
+            plot_result: Whether to plot the fitness evolution.
         Returns:
             A tuple with the best fitness history and the best solution found.
         """
@@ -133,15 +147,11 @@ class GA:
 
             self._replacement(mutated_offspring)
 
-        plt.plot(np.arange(1, iter_num + 1), history)
-        plt.title("Evolución de la Aptitud")
-        plt.xlabel("Generaciones")
-        plt.ylabel("Mejor Aptitud")
-        plt.grid(True)
-        plt.show()
+        if plot_result:
+            self.plot_evolution(history, iter_num)
 
-        print(f"Mejor solución encontrada: {self.best_solution}")
-        print(f"Aptitud de la mejor solución: {self.best_fitness}")
+        print(f"Best solution: {self.best_solution}")
+        print(f"Fitness of the best solution: {self.best_fitness}")
 
         return history, self.best_solution
 
@@ -161,4 +171,4 @@ if __name__ == "__main__":
         mutation_rate=MUTATION_RATE,
         crossover_rate=CROSSOVER_RATE,
     )
-    ga.run(iter_num=ITER_NUM)
+    history, best_solution = ga.run(iter_num=ITER_NUM, elite_size=2, plot_result=True)
