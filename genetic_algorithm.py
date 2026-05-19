@@ -190,9 +190,6 @@ class GA:
         if plot_result:
             self.plot_evolution(history, iter_num)
 
-        # print(f"Best solution: {self.best_solution}")
-        # print(f"Fitness of the best solution: {self.best_fitness}")
-
         return history, self.best_solution
 
 
@@ -212,4 +209,6 @@ if __name__ == "__main__":
         crossover_rate=CROSSOVER_RATE,
     )
     history, best_solution = ga.run(iter_num=ITER_NUM, elite_size=2)
+    print(f"Best fitness: {ga.best_fitness} / {STR_SIZE}")
+    print(f"Best solution: {best_solution}")
     ga.plot_evolution(history, ITER_NUM, problem_name="One Max")
