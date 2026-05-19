@@ -190,8 +190,8 @@ class GA:
         if plot_result:
             self.plot_evolution(history, iter_num)
 
-        print(f"Best solution: {self.best_solution}")
-        print(f"Fitness of the best solution: {self.best_fitness}")
+        # print(f"Best solution: {self.best_solution}")
+        # print(f"Fitness of the best solution: {self.best_fitness}")
 
         return history, self.best_solution
 
