@@ -50,8 +50,10 @@ def read_sat_instance(filename):
 
         if chromosome_length is None or n_clauses is None:
             raise ValueError("Invalid CNF file format: missing 'p cnf' line")
+        if clause_length is None:
+            clause_length = 3
 
-        clauses = np.empty((n_clauses, clause_length), dtype=int)  # type: ignore
+        clauses = np.empty((n_clauses, clause_length), dtype=int)
         clause_index = 0
 
         while clause_index < n_clauses:
@@ -59,6 +61,8 @@ def read_sat_instance(filename):
             if not clause_line or clause_line.startswith("c"):
                 continue
             clause = list(map(int, clause_line.split()[:-1]))
+            if len(clause) != clause_length:
+                continue
             clauses[clause_index] = clause
             clause_index += 1
 
