@@ -5,6 +5,13 @@ import genetic_algorithm as GA
 
 
 def get_random_filename(path="data/"):
+    """"
+    Get a random filename from the specified directory.
+    Args:
+        path (str): The directory to search for files.
+    Returns:
+        str: The path to a randomly selected file.
+    """
     files = [
         os.path.join(path, name)
         for name in os.listdir(path)
@@ -18,6 +25,14 @@ def get_random_filename(path="data/"):
 
 
 def read_sat_instance(filename):
+    """"
+    Read a SAT instance from a CNF file.
+    Args:
+        filename (str): The path to the CNF file.
+    Returns:
+        tuple: A tuple containing the chromosome length,
+        number of clauses, and the clauses themselves.
+    """
     chromosome_length = None
     n_clauses = None
     clause_length = None
@@ -38,8 +53,7 @@ def read_sat_instance(filename):
 
         clauses = np.empty((n_clauses, clause_length), dtype=int)  # type: ignore
         clause_index = 0
-        # TODO: Remove print statement after debugging
-        print(f"Reading {n_clauses} clauses with length {clause_length}...")
+
         while clause_index < n_clauses:
             clause_line = f.readline().strip()
             if not clause_line or clause_line.startswith("c"):
@@ -52,15 +66,31 @@ def read_sat_instance(filename):
 
 
 def generate_sat_fitness(clauses):
+    """"
+    Generate a fitness function for the SAT problem based on the given clauses.
+    Args:
+        clauses (np.ndarray): A 2D array where each row represents a clause
+        and each element is a literal (positive for true, negative for false).
+    Returns:
+        function: A fitness function that takes a chromosome and returns
+        the number of satisfied clauses.
+    """
     idxs = np.abs(clauses) - 1
     positive_mask = clauses > 0
 
     def fitness_func(chromosome):
+        """"
+        Calculate the fitness of a chromosome based on the number of satisfied clauses.
+        Args:
+            chromosome (np.ndarray): A binary array representing a solution.
+        Returns:
+            int: The number of satisfied clauses.
+        """
         gene_values = chromosome[idxs]
         satisfied_literals = (gene_values == positive_mask)
         satisfied_clauses = np.any(satisfied_literals, axis=1)
 
-        return int(np.sum(satisfied_clauses))
+        return np.sum(satisfied_clauses, dtype=np.int64)
 
     return fitness_func
 
@@ -68,9 +98,9 @@ def generate_sat_fitness(clauses):
 if __name__ == "__main__":
     filename = get_random_filename()
     print(f"Selected file: {filename}")
+
     chromosome_length, n_clauses, clauses = read_sat_instance(filename)
     print(f"Chromosome length: {chromosome_length}")
-    print(f"Number of clauses: {n_clauses}")
     print(f"Clauses shape: {len(clauses)} x {len(clauses[0])}")
     print(f"Clauses sample: \n{clauses[:5]}")
 
