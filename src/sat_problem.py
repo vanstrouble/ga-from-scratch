@@ -5,7 +5,7 @@ import genetic_algorithm as GA
 
 
 def get_random_filename(path="data/"):
-    """"
+    """
     Get a random filename from the specified directory.
     Args:
         path (str): The directory to search for files.
@@ -25,7 +25,7 @@ def get_random_filename(path="data/"):
 
 
 def read_sat_instance(filename):
-    """"
+    """
     Read a SAT instance from a CNF file.
     Args:
         filename (str): The path to the CNF file.
@@ -70,7 +70,7 @@ def read_sat_instance(filename):
 
 
 def generate_sat_fitness(clauses):
-    """"
+    """
     Generate a fitness function for the SAT problem based on the given clauses.
     Args:
         clauses (np.ndarray): A 2D array where each row represents a clause
@@ -83,7 +83,7 @@ def generate_sat_fitness(clauses):
     positive_mask = clauses > 0
 
     def fitness_func(chromosome):
-        """"
+        """
         Calculate the fitness of a chromosome based on the number of satisfied clauses.
         Args:
             chromosome (np.ndarray): A binary array representing a solution.
@@ -114,8 +114,8 @@ if __name__ == "__main__":
     POP_SIZE = 200
     MUTATION_RATE = 1 / chromosome_length  # Heuristic for mutation rate
     CROSSOVER_RATE = 0.8
+    ELITISM_RATE = 0.02
     ITER_NUM = 500
-    ELITE_SIZE = 2
 
     # Run the genetic algorithm
     ga = GA.GA(
@@ -123,10 +123,11 @@ if __name__ == "__main__":
         str_size=chromosome_length,
         fitness_func=fitness_func,
         mutation_rate=MUTATION_RATE,
-        crossover_rate=CROSSOVER_RATE
+        crossover_rate=CROSSOVER_RATE,
+        elitism_rate=ELITISM_RATE,
     )
 
-    history, best_solution = ga.run(iter_num=ITER_NUM, elite_size=ELITE_SIZE)
+    history, best_solution = ga.run(iter_num=ITER_NUM)
 
     # Results
     print(f"Best fitness: {ga.best_fitness} / {n_clauses}")
