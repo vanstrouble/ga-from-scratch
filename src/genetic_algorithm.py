@@ -15,7 +15,13 @@ def onemax(chromosome):
 
 class GA:
     def __init__(
-        self, pop_size, str_size, fitness_func, mutation_rate=0.01, crossover_rate=0.7
+        self,
+        pop_size,
+        str_size,
+        fitness_func,
+        mutation_rate=0.01,
+        crossover_rate=0.7,
+        elitism_rate=0.05
     ):
         """Create a new genetic algorithm instance.
         Args:
@@ -33,6 +39,7 @@ class GA:
         self.str_size = str_size
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
+        self.elite_size = max(1, int(pop_size * elitism_rate)) if elitism_rate else 0
         self.fitness_func = fitness_func
         self.best_solution = None
         self.best_fitness = 0
@@ -147,11 +154,10 @@ class GA:
         plt.tight_layout()
         plt.show()
 
-    def run(self, iter_num=100, elite_size=1, plot_result=False):
+    def run(self, iter_num=100, plot_result=False):
         """Run the genetic algorithm for a fixed number of iterations.
         Args:
             iter_num: Number of generations to execute.
-            elite_size: Number of best individuals to keep for the next generation.
             plot_result: Whether to plot the fitness evolution.
         Returns:
             A tuple with the best fitness history and the best solution found.
@@ -170,20 +176,20 @@ class GA:
 
             history[it] = self.best_fitness
 
-            # Elitism: Keep the best solution from the current generation
-            elite_idxs = np.argsort(fitness)[-elite_size:]
-            elites = self.population[elite_idxs].copy()
-
             parents = self._selection(fitness)
             offspring = self._crossover(parents)
             mutated_offspring = self._mutation(offspring)
 
-            worst_idxs = np.argsort(
-                np.array(
-                    [self.fitness_func(chromosome) for chromosome in mutated_offspring]
-                )
-            )[:elite_size]
-            mutated_offspring[worst_idxs] = elites
+            # Elitism: replace the worst individuals with the best from current gen
+            if self.elite_size:
+                elite_idxs = np.argsort(fitness)[-self.elite_size:]
+                elites = self.population[elite_idxs].copy()
+                worst_idxs = np.argsort(
+                    np.array(
+                        [self.fitness_func(chromosome) for chromosome in mutated_offspring]
+                    )
+                )[:self.elite_size]
+                mutated_offspring[worst_idxs] = elites
 
             self._replacement(mutated_offspring)
 
@@ -208,7 +214,7 @@ if __name__ == "__main__":
         mutation_rate=MUTATION_RATE,
         crossover_rate=CROSSOVER_RATE,
     )
-    history, best_solution = ga.run(iter_num=ITER_NUM, elite_size=2)
+    history, best_solution = ga.run(iter_num=ITER_NUM)
     print(f"Best fitness: {ga.best_fitness} / {STR_SIZE}")
     print(f"Best solution: {best_solution}")
     ga.plot_evolution(history, ITER_NUM, problem_name="One Max")
