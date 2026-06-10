@@ -142,10 +142,40 @@ if __name__ == "__main__":
 
     # ga.plot_evolution(history, ITER_NUM, problem_name=f"3-SAT Problem ({n_clauses} clauses)")
 
-    print("Testing get_random_filename with n_files=30:")
+    # Test GA generalization on multiple SAT instances
+    print("\n\nRunning multiple SAT instances...\n")
     filenames = get_random_filename(n_files=30)
-    print(f"Selected files: {filenames}")
 
-    print("\nTesting get_random_filename with n_files=1:")
-    filename = get_random_filename(n_files=1)
-    print(f"Selected file: {filename}")
+    # Hyperparameters
+    POP_SIZE = 200
+    CROSSOVER_RATE = 0.8
+    ELITISM_RATE = 0.02
+    ITER_NUM = 500
+
+    results = []
+    for filename in filenames:
+        chromosome_length, n_clauses, clauses = read_sat_instance(filename)
+        fitness_func = generate_sat_fitness(clauses)
+
+        ga = GA.GA(
+            pop_size=POP_SIZE,
+            str_size=chromosome_length,
+            fitness_func=fitness_func,
+            mutation_rate=1 / chromosome_length,
+            crossover_rate=CROSSOVER_RATE,
+            elitism_rate=ELITISM_RATE,
+        )
+        ga.run(iter_num=ITER_NUM)
+        results.append({
+            "file": filename,
+            "best_fitness": ga.best_fitness,
+            "n_clauses": n_clauses,
+            "satisfaction": ga.best_fitness / n_clauses * 100,
+        })
+        print(f"{filename:10s} • {ga.best_fitness}/{n_clauses} ({ga.best_fitness / n_clauses * 100:.1f}%)")
+
+    satisfactions = np.array([r["satisfaction"] for r in results])
+
+    print(f"\nAverage satisfaction: {np.mean(satisfactions):.2f}%")
+    print(f"Standard deviation: {np.std(satisfactions):.2f}%")
+    print(f"Solved instances: {np.sum(satisfactions == 100)} / {len(results)}")
