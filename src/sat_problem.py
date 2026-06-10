@@ -4,14 +4,18 @@ import numpy as np
 import genetic_algorithm as GA
 
 
-def get_random_filename(path="data/"):
+def get_random_filename(path="data/", n_files=1):
     """
     Get a random filename from the specified directory.
     Args:
         path (str): The directory to search for files.
+        n_files (int): The number of files to select. Must be a positive integer.
     Returns:
-        str: The path to a randomly selected file.
+        list: A list of paths to randomly selected files.
     """
+    if n_files < 1:
+        raise ValueError("n_files must be a positive integer")
+
     files = [
         os.path.join(path, name)
         for name in os.listdir(path)
@@ -20,8 +24,10 @@ def get_random_filename(path="data/"):
 
     if not files:
         raise FileNotFoundError(f"No files found in '{path}'")
+    if n_files > len(files):
+        raise ValueError(f"Requested {n_files} files, but only {len(files)} available in '{path}'")
 
-    return random.choice(files)
+    return random.sample(files, n_files)
 
 
 def read_sat_instance(filename):
@@ -100,38 +106,46 @@ def generate_sat_fitness(clauses):
 
 
 if __name__ == "__main__":
-    filename = get_random_filename()
+    # filename = get_random_filename()
+    # print(f"Selected file: {filename}")
+
+    # chromosome_length, n_clauses, clauses = read_sat_instance(filename)
+    # print(f"Chromosome length: {chromosome_length}")
+    # print(f"Clauses shape: {len(clauses)} x {len(clauses[0])}")
+    # print(f"Clauses sample: \n{clauses[:5]}")
+
+    # fitness_func = generate_sat_fitness(clauses)
+
+    # # Hyperparameters
+    # POP_SIZE = 200
+    # MUTATION_RATE = 1 / chromosome_length  # Heuristic for mutation rate
+    # CROSSOVER_RATE = 0.8
+    # ELITISM_RATE = 0.02
+    # ITER_NUM = 500
+
+    # # Run the genetic algorithm
+    # ga = GA.GA(
+    #     pop_size=POP_SIZE,
+    #     str_size=chromosome_length,
+    #     fitness_func=fitness_func,
+    #     mutation_rate=MUTATION_RATE,
+    #     crossover_rate=CROSSOVER_RATE,
+    #     elitism_rate=ELITISM_RATE,
+    # )
+
+    # history, best_solution = ga.run(iter_num=ITER_NUM)
+
+    # # Results
+    # print(f"Best fitness: {ga.best_fitness} / {n_clauses}")
+    # print(f"Satisfies: {ga.best_fitness / n_clauses * 100:.1f}%")
+    # print(f"Best solution: {best_solution}")
+
+    # ga.plot_evolution(history, ITER_NUM, problem_name=f"3-SAT Problem ({n_clauses} clauses)")
+
+    print("Testing get_random_filename with n_files=30:")
+    filenames = get_random_filename(n_files=30)
+    print(f"Selected files: {filenames}")
+
+    print("\nTesting get_random_filename with n_files=1:")
+    filename = get_random_filename(n_files=1)
     print(f"Selected file: {filename}")
-
-    chromosome_length, n_clauses, clauses = read_sat_instance(filename)
-    print(f"Chromosome length: {chromosome_length}")
-    print(f"Clauses shape: {len(clauses)} x {len(clauses[0])}")
-    print(f"Clauses sample: \n{clauses[:5]}")
-
-    fitness_func = generate_sat_fitness(clauses)
-
-    # Hyperparameters
-    POP_SIZE = 200
-    MUTATION_RATE = 1 / chromosome_length  # Heuristic for mutation rate
-    CROSSOVER_RATE = 0.8
-    ELITISM_RATE = 0.02
-    ITER_NUM = 500
-
-    # Run the genetic algorithm
-    ga = GA.GA(
-        pop_size=POP_SIZE,
-        str_size=chromosome_length,
-        fitness_func=fitness_func,
-        mutation_rate=MUTATION_RATE,
-        crossover_rate=CROSSOVER_RATE,
-        elitism_rate=ELITISM_RATE,
-    )
-
-    history, best_solution = ga.run(iter_num=ITER_NUM)
-
-    # Results
-    print(f"Best fitness: {ga.best_fitness} / {n_clauses}")
-    print(f"Satisfies: {ga.best_fitness / n_clauses * 100:.1f}%")
-    print(f"Best solution: {best_solution}")
-
-    ga.plot_evolution(history, ITER_NUM, problem_name=f"3-SAT Problem ({n_clauses} clauses)")
