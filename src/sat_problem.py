@@ -153,6 +153,7 @@ if __name__ == "__main__":
     ITER_NUM = 500
 
     results = []
+    count = 1
     for filename in filenames:
         chromosome_length, n_clauses, clauses = read_sat_instance(filename)
         fitness_func = generate_sat_fitness(clauses)
@@ -172,7 +173,11 @@ if __name__ == "__main__":
             "n_clauses": n_clauses,
             "satisfaction": ga.best_fitness / n_clauses * 100,
         })
-        print(f"{filename:10s} • {ga.best_fitness}/{n_clauses} ({ga.best_fitness / n_clauses * 100:.1f}%)")
+        print(
+            f"{count:2d}. {filename:10s} • {ga.best_fitness}/{n_clauses} "
+            f"({ga.best_fitness / n_clauses * 100:.1f}%)"
+        )
+        count += 1
 
     satisfactions = np.array([r["satisfaction"] for r in results])
 
