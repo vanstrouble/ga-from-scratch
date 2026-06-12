@@ -160,12 +160,23 @@ if __name__ == "__main__":
     ELITISM_RATE = 0.02
     ITER_NUM = 500
 
-    single_result = evaluate_instance((filename, POP_SIZE, CROSSOVER_RATE, ELITISM_RATE, ITER_NUM))
+    ga = GA.GA(
+        pop_size=POP_SIZE,
+        str_size=chromosome_length,
+        fitness_func=fitness_func,
+        mutation_rate=MUTATION_RATE,
+        crossover_rate=CROSSOVER_RATE,
+        elitism_rate=ELITISM_RATE,
+    )
 
-    # Results (note: `evaluate_instance` does not return GA history/solution)
-    print(f"Best fitness: {single_result['best_fitness']} / {single_result['n_clauses']}")
-    print(f"Satisfies: {single_result['satisfaction']:.1f}%")
-    print(f"File: {single_result['file']}")
+    history, best_solution = ga.run(iter_num=ITER_NUM)
+
+    # Results
+    print(f"Best fitness: {ga.best_fitness} / {n_clauses}")
+    print(f"Satisfies: {ga.best_fitness / n_clauses * 100:.1f}%")
+    print(f"Best solution: {best_solution}")
+
+    # ga.plot_evolution(history, ITER_NUM, problem_name=f"3-SAT Problem ({n_clauses} clauses)")
 
     # Test GA consistency on the same SAT instance 30 times in parallel
     print("\n\nRunning 30 GA trials on the same SAT instance...\n")
@@ -189,7 +200,6 @@ if __name__ == "__main__":
 
     print(f"\nAverage satisfaction: {np.mean(repeated_satisfactions):.2f}%")
     print(f"Standard deviation: {np.std(repeated_satisfactions):.2f}%")
-    print(f"Solved instances: {np.sum(repeated_satisfactions == 100)} / {len(repeated_results)}")
 
     mean_repeated = float(np.mean(repeated_satisfactions))
 
