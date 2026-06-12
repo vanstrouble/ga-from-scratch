@@ -140,6 +140,8 @@ def evaluate_instance(args):
 
 if __name__ == "__main__":
     filename = get_random_filename()
+    if isinstance(filename, (list, tuple)):
+        filename = filename[0]
     print(f"Selected file: {filename}")
 
     chromosome_length, n_clauses, clauses = read_sat_instance(filename)
@@ -156,54 +158,42 @@ if __name__ == "__main__":
     ELITISM_RATE = 0.02
     ITER_NUM = 500
 
-    # Run the genetic algorithm
-    ga = GA.GA(
-        pop_size=POP_SIZE,
-        str_size=chromosome_length,
-        fitness_func=fitness_func,
-        mutation_rate=MUTATION_RATE,
-        crossover_rate=CROSSOVER_RATE,
-        elitism_rate=ELITISM_RATE,
-    )
+    single_result = evaluate_instance((filename, POP_SIZE, CROSSOVER_RATE, ELITISM_RATE, ITER_NUM))
 
-    history, best_solution = ga.run(iter_num=ITER_NUM)
+    # Results (note: `evaluate_instance` does not return GA history/solution)
+    print(f"Best fitness: {single_result['best_fitness']} / {single_result['n_clauses']}")
+    print(f"Satisfies: {single_result['satisfaction']:.1f}%")
+    print(f"File: {single_result['file']}")
 
-    # Results
-    print(f"Best fitness: {ga.best_fitness} / {n_clauses}")
-    print(f"Satisfies: {ga.best_fitness / n_clauses * 100:.1f}%")
-    print(f"Best solution: {best_solution}")
+    # # Test GA generalization on multiple SAT instances
+    # print("\n\nRunning multiple SAT instances...\n")
+    # filenames = get_random_filename(n_files=30)
 
-    ga.plot_evolution(history, ITER_NUM, problem_name=f"3-SAT Problem ({n_clauses} clauses)")
+    # # Hyperparameters
+    # POP_SIZE = 200
+    # CROSSOVER_RATE = 0.8
+    # ELITISM_RATE = 0.02
+    # ITER_NUM = 500
 
-    # Test GA generalization on multiple SAT instances
-    print("\n\nRunning multiple SAT instances...\n")
-    filenames = get_random_filename(n_files=30)
+    # # Run GA on multiple instances in parallel
+    # with Pool(processes=cpu_count()) as pool:
+    #     results = pool.map(
+    #         evaluate_instance,
+    #         [
+    #             (filename, POP_SIZE, CROSSOVER_RATE, ELITISM_RATE, ITER_NUM)
+    #             for filename in filenames
+    #         ],
+    #     )
 
-    # Hyperparameters
-    POP_SIZE = 200
-    CROSSOVER_RATE = 0.8
-    ELITISM_RATE = 0.02
-    ITER_NUM = 500
+    # for count, result in enumerate(results, start=1):
+    #     print(
+    #         f"{count:2d}. {result['file']:10s} • "
+    #         f"{result['best_fitness']}/{result['n_clauses']} "
+    #         f"({result['satisfaction']:.1f}%)"
+    #     )
 
-    # Run GA on multiple instances in parallel
-    with Pool(processes=cpu_count()) as pool:
-        results = pool.map(
-            evaluate_instance,
-            [
-                (filename, POP_SIZE, CROSSOVER_RATE, ELITISM_RATE, ITER_NUM)
-                for filename in filenames
-            ],
-        )
+    # satisfactions = np.array([r["satisfaction"] for r in results])
 
-    for count, result in enumerate(results, start=1):
-        print(
-            f"{count:2d}. {result['file']:10s} • "
-            f"{result['best_fitness']}/{result['n_clauses']} "
-            f"({result['satisfaction']:.1f}%)"
-        )
-
-    satisfactions = np.array([r["satisfaction"] for r in results])
-
-    print(f"\nAverage satisfaction: {np.mean(satisfactions):.2f}%")
-    print(f"Standard deviation: {np.std(satisfactions):.2f}%")
-    print(f"Solved instances: {np.sum(satisfactions == 100)} / {len(results)}")
+    # print(f"\nAverage satisfaction: {np.mean(satisfactions):.2f}%")
+    # print(f"Standard deviation: {np.std(satisfactions):.2f}%")
+    # print(f"Solved instances: {np.sum(satisfactions == 100)} / {len(results)}")
