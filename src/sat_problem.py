@@ -2,6 +2,7 @@ import os
 import random
 import numpy as np
 import genetic_algorithm as GA
+from multiprocessing import Pool, cpu_count
 
 
 def get_random_filename(path="data/", n_files=1):
@@ -105,42 +106,74 @@ def generate_sat_fitness(clauses):
     return fitness_func
 
 
+def evaluate_instance(args):
+    """
+    Evaluate a single SAT instance using the genetic algorithm.
+    Args:
+        args (tuple): A tuple containing the filename, pop_size, crossover_rate,
+        elitism_rate, and iter_num.
+    Returns:
+        dict: Result dictionary with file, best_fitness, n_clauses, and satisfaction.
+    """
+    filename, pop_size, crossover_rate, elitism_rate, iter_num = args
+    chromosome_length, n_clauses, clauses = read_sat_instance(filename)
+    fitness_func = generate_sat_fitness(clauses)
+
+    ga = GA.GA(
+        pop_size=pop_size,
+        str_size=chromosome_length,
+        fitness_func=fitness_func,
+        mutation_rate=1 / chromosome_length,
+        crossover_rate=crossover_rate,
+        elitism_rate=elitism_rate,
+    )
+    ga.run(iter_num=iter_num)
+
+    satisfaction = ga.best_fitness / n_clauses * 100
+    return {
+        "file": filename,
+        "best_fitness": ga.best_fitness,
+        "n_clauses": n_clauses,
+        "satisfaction": satisfaction,
+    }
+
+
 if __name__ == "__main__":
-    # filename = get_random_filename()
-    # print(f"Selected file: {filename}")
+    filename = get_random_filename()
+    print(f"Selected file: {filename}")
 
-    # chromosome_length, n_clauses, clauses = read_sat_instance(filename)
-    # print(f"Chromosome length: {chromosome_length}")
-    # print(f"Clauses shape: {len(clauses)} x {len(clauses[0])}")
-    # print(f"Clauses sample: \n{clauses[:5]}")
+    chromosome_length, n_clauses, clauses = read_sat_instance(filename)
+    print(f"Chromosome length: {chromosome_length}")
+    print(f"Clauses shape: {len(clauses)} x {len(clauses[0])}")
+    print(f"Clauses sample: \n{clauses[:5]}")
 
-    # fitness_func = generate_sat_fitness(clauses)
+    fitness_func = generate_sat_fitness(clauses)
 
-    # # Hyperparameters
-    # POP_SIZE = 200
-    # MUTATION_RATE = 1 / chromosome_length  # Heuristic for mutation rate
-    # CROSSOVER_RATE = 0.8
-    # ELITISM_RATE = 0.02
-    # ITER_NUM = 500
+    # Hyperparameters
+    POP_SIZE = 200
+    MUTATION_RATE = 1 / chromosome_length  # Heuristic for mutation rate
+    CROSSOVER_RATE = 0.8
+    ELITISM_RATE = 0.02
+    ITER_NUM = 500
 
-    # # Run the genetic algorithm
-    # ga = GA.GA(
-    #     pop_size=POP_SIZE,
-    #     str_size=chromosome_length,
-    #     fitness_func=fitness_func,
-    #     mutation_rate=MUTATION_RATE,
-    #     crossover_rate=CROSSOVER_RATE,
-    #     elitism_rate=ELITISM_RATE,
-    # )
+    # Run the genetic algorithm
+    ga = GA.GA(
+        pop_size=POP_SIZE,
+        str_size=chromosome_length,
+        fitness_func=fitness_func,
+        mutation_rate=MUTATION_RATE,
+        crossover_rate=CROSSOVER_RATE,
+        elitism_rate=ELITISM_RATE,
+    )
 
-    # history, best_solution = ga.run(iter_num=ITER_NUM)
+    history, best_solution = ga.run(iter_num=ITER_NUM)
 
-    # # Results
-    # print(f"Best fitness: {ga.best_fitness} / {n_clauses}")
-    # print(f"Satisfies: {ga.best_fitness / n_clauses * 100:.1f}%")
-    # print(f"Best solution: {best_solution}")
+    # Results
+    print(f"Best fitness: {ga.best_fitness} / {n_clauses}")
+    print(f"Satisfies: {ga.best_fitness / n_clauses * 100:.1f}%")
+    print(f"Best solution: {best_solution}")
 
-    # ga.plot_evolution(history, ITER_NUM, problem_name=f"3-SAT Problem ({n_clauses} clauses)")
+    ga.plot_evolution(history, ITER_NUM, problem_name=f"3-SAT Problem ({n_clauses} clauses)")
 
     # Test GA generalization on multiple SAT instances
     print("\n\nRunning multiple SAT instances...\n")
@@ -152,32 +185,22 @@ if __name__ == "__main__":
     ELITISM_RATE = 0.02
     ITER_NUM = 500
 
-    results = []
-    count = 1
-    for filename in filenames:
-        chromosome_length, n_clauses, clauses = read_sat_instance(filename)
-        fitness_func = generate_sat_fitness(clauses)
+    # Run GA on multiple instances in parallel
+    with Pool(processes=cpu_count()) as pool:
+        results = pool.map(
+            evaluate_instance,
+            [
+                (filename, POP_SIZE, CROSSOVER_RATE, ELITISM_RATE, ITER_NUM)
+                for filename in filenames
+            ],
+        )
 
-        ga = GA.GA(
-            pop_size=POP_SIZE,
-            str_size=chromosome_length,
-            fitness_func=fitness_func,
-            mutation_rate=1 / chromosome_length,
-            crossover_rate=CROSSOVER_RATE,
-            elitism_rate=ELITISM_RATE,
-        )
-        ga.run(iter_num=ITER_NUM)
-        results.append({
-            "file": filename,
-            "best_fitness": ga.best_fitness,
-            "n_clauses": n_clauses,
-            "satisfaction": ga.best_fitness / n_clauses * 100,
-        })
+    for count, result in enumerate(results, start=1):
         print(
-            f"{count:2d}. {filename:10s} • {ga.best_fitness}/{n_clauses} "
-            f"({ga.best_fitness / n_clauses * 100:.1f}%)"
+            f"{count:2d}. {result['file']:10s} • "
+            f"{result['best_fitness']}/{result['n_clauses']} "
+            f"({result['satisfaction']:.1f}%)"
         )
-        count += 1
 
     satisfactions = np.array([r["satisfaction"] for r in results])
 
