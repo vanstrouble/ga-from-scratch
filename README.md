@@ -131,6 +131,52 @@ A score below 100% is still informative: it tells how close the best assignment 
 
 ---
 
+## Multi-instance evaluation
+
+Running the GA across a set of 30 randomly selected `uf20` instances (all with 20 variables and 91 clauses) produced the following results:
+
+```
+Running multiple SAT instances...
+
+ 1. data/uf20-0304.cnf • 91/91 (100.0%)
+ 2. data/uf20-0578.cnf • 91/91 (100.0%)
+ 3. data/uf20-0642.cnf • 91/91 (100.0%)
+ 4. data/uf20-0502.cnf • 91/91 (100.0%)
+ 5. data/uf20-086.cnf • 91/91 (100.0%)
+ 6. data/uf20-0178.cnf • 91/91 (100.0%)
+ 7. data/uf20-0745.cnf • 91/91 (100.0%)
+ 8. data/uf20-0155.cnf • 91/91 (100.0%)
+ 9. data/uf20-0280.cnf • 91/91 (100.0%)
+10. data/uf20-0647.cnf • 91/91 (100.0%)
+11. data/uf20-0655.cnf • 91/91 (100.0%)
+12. data/uf20-0414.cnf • 91/91 (100.0%)
+13. data/uf20-0972.cnf • 91/91 (100.0%)
+14. data/uf20-0508.cnf • 91/91 (100.0%)
+15. data/uf20-0589.cnf • 91/91 (100.0%)
+16. data/uf20-0955.cnf • 91/91 (100.0%)
+17. data/uf20-0173.cnf • 91/91 (100.0%)
+18. data/uf20-0773.cnf • 91/91 (100.0%)
+19. data/uf20-0698.cnf • 91/91 (100.0%)
+20. data/uf20-0183.cnf • 91/91 (100.0%)
+21. data/uf20-0584.cnf • 91/91 (100.0%)
+22. data/uf20-0604.cnf • 91/91 (100.0%)
+23. data/uf20-0242.cnf • 91/91 (100.0%)
+24. data/uf20-052.cnf • 91/91 (100.0%)
+25. data/uf20-0568.cnf • 91/91 (100.0%)
+26. data/uf20-0365.cnf • 91/91 (100.0%)
+27. data/uf20-0389.cnf • 91/91 (100.0%)
+28. data/uf20-0734.cnf • 91/91 (100.0%)
+29. data/uf20-0615.cnf • 91/91 (100.0%)
+30. data/uf20-0558.cnf • 91/91 (100.0%)
+
+Average satisfaction: 100.00%
+Standard deviation: 0.00%
+Solved instances: 30 / 30
+```
+
+Testing the GA on multiple instances is important to assess its generality and robustness: a single-instance success can be misleading, while a broad sweep over randomly selected benchmarks reveals whether the method consistently finds high-quality assignments, how sensitive it is to instance variability, and whether hyperparameters need retuning for different cases.
+
+
 ## Setup and Usage
 
 The project runs on Python 3.10 or later. No special framework is required beyond NumPy and Matplotlib.
