@@ -1,6 +1,7 @@
 import os
 import random
 import numpy as np
+import matplotlib.pyplot as plt
 import genetic_algorithm as GA
 from multiprocessing import Pool, cpu_count
 
@@ -139,6 +140,7 @@ def evaluate_instance(args):
 
 
 if __name__ == "__main__":
+    # Test GA on a single SAT instance
     filename = get_random_filename()
     if isinstance(filename, (list, tuple)):
         filename = filename[0]
@@ -165,35 +167,82 @@ if __name__ == "__main__":
     print(f"Satisfies: {single_result['satisfaction']:.1f}%")
     print(f"File: {single_result['file']}")
 
-    # # Test GA generalization on multiple SAT instances
-    # print("\n\nRunning multiple SAT instances...\n")
-    # filenames = get_random_filename(n_files=30)
+    # Test GA consistency on the same SAT instance 30 times in parallel
+    print("\n\nRunning 30 GA trials on the same SAT instance...\n")
+    repeated_runs = 30
+    repeated_args = [
+        (filename, POP_SIZE, CROSSOVER_RATE, ELITISM_RATE, ITER_NUM)
+        for _ in range(repeated_runs)
+    ]
 
-    # # Hyperparameters
-    # POP_SIZE = 200
-    # CROSSOVER_RATE = 0.8
-    # ELITISM_RATE = 0.02
-    # ITER_NUM = 500
+    with Pool(processes=cpu_count()) as pool:
+        repeated_results = pool.map(evaluate_instance, repeated_args)
 
-    # # Run GA on multiple instances in parallel
-    # with Pool(processes=cpu_count()) as pool:
-    #     results = pool.map(
-    #         evaluate_instance,
-    #         [
-    #             (filename, POP_SIZE, CROSSOVER_RATE, ELITISM_RATE, ITER_NUM)
-    #             for filename in filenames
-    #         ],
-    #     )
+    for count, result in enumerate(repeated_results, start=1):
+        print(
+            f"{count:2d}. {result['file']:10s} • "
+            f"{result['best_fitness']}/{result['n_clauses']} "
+            f"({result['satisfaction']:.1f}%)"
+        )
 
-    # for count, result in enumerate(results, start=1):
-    #     print(
-    #         f"{count:2d}. {result['file']:10s} • "
-    #         f"{result['best_fitness']}/{result['n_clauses']} "
-    #         f"({result['satisfaction']:.1f}%)"
-    #     )
+    repeated_satisfactions = np.array([r["satisfaction"] for r in repeated_results])
 
-    # satisfactions = np.array([r["satisfaction"] for r in results])
+    print(f"\nAverage satisfaction: {np.mean(repeated_satisfactions):.2f}%")
+    print(f"Standard deviation: {np.std(repeated_satisfactions):.2f}%")
+    print(f"Solved instances: {np.sum(repeated_satisfactions == 100)} / {len(repeated_results)}")
 
-    # print(f"\nAverage satisfaction: {np.mean(satisfactions):.2f}%")
-    # print(f"Standard deviation: {np.std(satisfactions):.2f}%")
-    # print(f"Solved instances: {np.sum(satisfactions == 100)} / {len(results)}")
+    mean_repeated = float(np.mean(repeated_satisfactions))
+
+    plt.figure(figsize=(10, 5))
+    plt.hist(
+        repeated_satisfactions,
+        bins=min(10, max(1, len(np.unique(repeated_satisfactions)))),
+        edgecolor="black",
+        alpha=0.85,
+    )
+    plt.axvline(
+        mean_repeated,
+        color="crimson",
+        linestyle="--",
+        linewidth=2,
+        label="Mean",
+    )
+    plt.title(f"SAT satisfaction histogram over {repeated_runs} runs")
+    plt.xlabel("Satisfaction (%)")
+    plt.ylabel("Frequency")
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+    # Test GA generalization on multiple SAT instances
+    print("\n\nRunning multiple SAT instances...\n")
+    filenames = get_random_filename(n_files=30)
+
+    # Hyperparameters
+    POP_SIZE = 200
+    CROSSOVER_RATE = 0.8
+    ELITISM_RATE = 0.02
+    ITER_NUM = 500
+
+    # Run GA on multiple instances in parallel
+    with Pool(processes=cpu_count()) as pool:
+        results = pool.map(
+            evaluate_instance,
+            [
+                (filename, POP_SIZE, CROSSOVER_RATE, ELITISM_RATE, ITER_NUM)
+                for filename in filenames
+            ],
+        )
+
+    for count, result in enumerate(results, start=1):
+        print(
+            f"{count:2d}. {result['file']:10s} • "
+            f"{result['best_fitness']}/{result['n_clauses']} "
+            f"({result['satisfaction']:.1f}%)"
+        )
+
+    satisfactions = np.array([r["satisfaction"] for r in results])
+
+    print(f"\nAverage satisfaction: {np.mean(satisfactions):.2f}%")
+    print(f"Standard deviation: {np.std(satisfactions):.2f}%")
+    print(f"Solved instances: {np.sum(satisfactions == 100)} / {len(results)}")
